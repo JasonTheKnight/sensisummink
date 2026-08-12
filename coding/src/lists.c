@@ -7,14 +7,10 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
-#ifndef FREEBSD228
-#include <malloc.h>
-#endif
 #include <fcntl.h>
 #include <memory.h>
-#if defined( OSF ) || defined( FREEBSD228 )
 #include <stdlib.h>
-#endif
+#include <time.h>
 
 #ifdef SUNOS
 #define TIME_DEFINES
@@ -197,7 +193,7 @@ void            tmp_comp_list(saved_player * sp)
 #ifdef OSF
     store_int(oldstack, ((long) stack - (long) oldstack));
 #else
-    store_int(oldstack, ((int) stack - (int) oldstack));
+    store_int(oldstack, (int)(stack - oldstack));
 #endif
 }
 
@@ -214,7 +210,7 @@ void            compress_list(saved_player * sp)
 #ifdef OSF
     length = (long) stack - (long) oldstack;
 #else
-    length = (int) stack - (int) oldstack;
+    length = (int)(stack - oldstack);
 #endif
    if (length == 4)
    {
@@ -2371,4 +2367,3 @@ void 		purge_list(player *p, char *str)
    }
    stack = oldstack;
 }
-

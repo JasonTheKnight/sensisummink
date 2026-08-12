@@ -54,10 +54,6 @@
 #include "include/intercom.h"
 #endif
 
-#ifdef SOLARIS
- extern char *sys_errlist[];
-#endif
-
 #define ABS(x) (((x)>0)?(x):-(x))
 
 /* interns */
@@ -509,7 +505,7 @@ void            log(char *filename, char *string)
 #endif
    if(fd<0) {
      sprintf(stack, "%s (failed) - %s\n", filename, string);
-     printf(stack);
+     printf("%s", stack);
      return;
    }
    length = lseek(fd, 0, SEEK_END);
@@ -523,13 +519,13 @@ void            log(char *filename, char *string)
 #endif
       if(fd<0) {
         sprintf(stack, "%s (failed) - %s\n", filename, string);
-        printf(stack);
+        printf("%s", stack);
         return;
       }
    }
    sprintf(stack, "%s - %s\n", sys_time(), string);
    if (!(sys_flags & NO_PRINT_LOG))
-      printf(stack);
+      printf("%s", stack);
    write(fd, stack, strlen(stack));
    close(fd);
 }
@@ -563,7 +559,7 @@ void            handle_error(char *error_msg)
 
    log("dump", "------------ Starting dump");
 
-   sprintf(stack_start, "Errno set to %d, %s", errno, sys_errlist[errno]);
+   sprintf(stack_start, "Errno set to %d, %s", errno, strerror(errno));
    stack = end_string(stack_start);
    log("dump", stack_start);
 
@@ -1006,7 +1002,7 @@ void boot(void)
 
 /* got to have a main to control everything */
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
    FILE *pid_fd;
 
@@ -1116,8 +1112,8 @@ void main(int argc, char *argv[])
           sprintf(stack_start, "Lost stack reclaimed %ld bytes\n",
                  (long) stack - (long) stack_start);
 #else
-          sprintf(stack_start, "Lost stack reclaimed %d bytes\n",
-                 (int) stack - (int) stack_start);
+          sprintf(stack_start, "Lost stack reclaimed %td bytes\n",
+                 stack - stack_start);
 #endif
          stack = end_string(stack_start);
          log("stack", stack_start);
@@ -1141,12 +1137,13 @@ void main(int argc, char *argv[])
       current_player = 0;
       current_room = 0;
       timer_function();
-      action = "sigpause";
-      sigpause(0);
+      action = "pause";
+      pause();
       action = "ping";
       do_alive_ping();
    }
    close_down();
+   return 0;
 }
 
 
@@ -1383,7 +1380,7 @@ void	vlog(char *filename, char *format, ...)
   va_end(arguments);
   stack = end_string(oldstack);
   log(filename, oldstack);
-  stack = oldstack;
+   stack = oldstack;
 }
 
 

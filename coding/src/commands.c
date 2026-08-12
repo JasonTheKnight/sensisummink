@@ -15,7 +15,7 @@
 #define _XOPEN_SOURCE
 #endif
 #include <unistd.h>
-#ifdef IRIX
+#if defined(__linux__) || defined(IRIX)
 #include <crypt.h>
 #endif
 

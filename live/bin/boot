@@ -10,7 +10,7 @@ ANGEL=angel
 SERVER=summink
 
 # The location of all the files
-PATHDIR="/home/users/someone/summink/live"
+PATHDIR="Users/jason/Documents/sensisummink/live"
 
 # Name of a file to log info to
 BOOTERROR=boot-script.log

@@ -1,5 +1,22 @@
 Quickstart Instructions:
 
+Modern macOS and Linux systems:
+
+1) Install a C compiler and make (Xcode Command Line Tools on macOS).
+2) cd coding/src
+3) Edit include/config.h, especially CODING_ROOT, CODING_BACKUPS and ports.
+4) make
+5) make install
+
+The Makefile detects macOS and avoids historical Linux-only linker flags.
+On Linux, install the system's libcrypt development package if it is not
+already available.  The resulting programs are summink, angel, ident and
+intercom.  The server still expects to be started from its configured ROOT
+directory.  The build now creates the empty runtime directories omitted by
+the historical source archive.
+
+Original instructions:
+
 1) cd coding/src
 1) edit include/config.h for your system, environment, and required
    options.

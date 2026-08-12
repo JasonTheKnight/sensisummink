@@ -5,6 +5,7 @@
 #include "include/config.h"
 
 #include <stdio.h>
+#include <time.h>
 #include <sys/types.h>
 #if defined( LINUX ) && defined( GLIBC )
 #define __STRICT_ANSI__
@@ -116,26 +117,21 @@ void            init_socket(void)
    struct sockaddr_in main_socket;
    int             dummy = 1;
    char           *oldstack;
-   char *hostname;
-   struct hostent *hp;
 
    oldstack = stack;
    
    /* grab the main socket */
 
-   hostname=(char *)malloc(101);
 #ifndef HAVE_BZERO
     memset(&main_socket, 0, sizeof(struct sockaddr_in));
 #else 
     bzero((char *)&main_socket, sizeof(struct sockaddr_in));
 #endif /* have_bzero */
-   gethostname(hostname,100);
-
-   hp=gethostbyname(hostname);
-   if ( hp == NULL)
-      handle_error("Error: Host machine does not exist!\n");
- 
-   main_socket.sin_family=hp->h_addrtype;
+   /* Binding a server socket does not require the machine's hostname to be
+    * present in DNS.  INADDR_ANY is portable and works on modern systems
+    * whose local hostname is only advertised through mDNS. */
+   main_socket.sin_family = AF_INET;
+   main_socket.sin_addr.s_addr = htonl(INADDR_ANY);
    main_socket.sin_port=htons(talker_port);
 
    main_descriptor = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
@@ -156,13 +152,9 @@ void            init_socket(void)
 #endif
       handle_error("Can't set non-blocking");
 
-/*
-   main_socket.sin_addr.s_addr = INADDR_ANY;
-*/
-
    if (bind(main_descriptor, (struct sockaddr *) & main_socket, sizeof(main_socket)) < 0)
    {
-      log("boot", "Couldn't bind socket!!!");
+      vlog("boot", "Couldn't bind socket: %s", strerror(errno));
       exit(-2);
    }
 
@@ -707,4 +699,3 @@ void            do_prompt(player * p, char *str)
    tell_player(p, oldstack);
    stack = oldstack;
 }
-

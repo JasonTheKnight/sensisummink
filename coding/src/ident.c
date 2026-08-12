@@ -32,6 +32,8 @@
  */
 
 #include "include/config.h"
+
+#include <time.h>
 #include "include/ident.h"
 
 #include <unistd.h>
@@ -234,7 +236,7 @@ int main(int argc, char *argv[])
       check_requests();
       check_connections();
 #if !defined(NOALARM)
-      sigpause(0);
+      pause();
 #endif /* !NOALARM */
    }
 

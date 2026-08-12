@@ -15,6 +15,7 @@
 #include <string.h>
 #include <signal.h>
 #include <memory.h>
+#include <time.h>
 #include <sys/types.h>
 #include <sys/time.h>
 
@@ -326,7 +327,7 @@ void            sync_note_hash(int number)
 #ifdef OSF
     length = (long) stack - (long) oldstack;
 #else
-    length = (int) stack - (int) oldstack;
+    length = (int)(stack - oldstack);
 #endif
    sprintf(stack, "files/notes/hash%d", number);
 #if defined( FREEBSD )
@@ -1065,7 +1066,7 @@ void            end_post(player * p)
 #ifdef OSF
     article->text.length = (long) stack - (long) oldstack;
 #else
-    article->text.length = (int) stack - (int) oldstack;
+    article->text.length = (int)(stack - oldstack);
 #endif
    article->text.where = (char *) MALLOC(article->text.length);
    memcpy(article->text.where, oldstack, article->text.length);
@@ -1106,7 +1107,7 @@ void            end_spost(player * p)
 #ifdef OSF
     article->text.length = (long) stack - (long) oldstack;
 #else
-    article->text.length = (int) stack - (int) oldstack;
+    article->text.length = (int)(stack - oldstack);
 #endif
    article->text.where = (char *) MALLOC(article->text.length);
    memcpy(article->text.where, oldstack, article->text.length);
@@ -2012,7 +2013,7 @@ void            end_mail(player * p)
 #ifdef OSF
        mail->text.length = (long) stack - (long) comp;
 #else
-       mail->text.length = (int) stack - (int) comp;
+       mail->text.length = (int)(stack - comp);
 #endif
       mail->text.where = (char *) MALLOC(mail->text.length);
       memcpy(mail->text.where, comp, mail->text.length);
@@ -2873,13 +2874,12 @@ void            recount_news(player * p, char *str)
    headers that get spammed with re's */
 char *tidy_article_title(char *str)
 {
-   char	*end, *start, *oldstack;
+   char	*end, *start;
    int  reflag = 0;
    
-   oldstack = stack;
    start = str;
    end = strchr(str, 0);
-   if (!*str || (strlen(str)==0) || (start>=end) || (str==""))
+   if (!*str || start >= end)
    {
       sprintf(stack, "<Untitled>");
       return stack;

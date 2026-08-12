@@ -100,7 +100,7 @@ void compress_room(room *r) {
 #ifdef OSF
      length=(long)stack-(long)oldstack;
 #else
-     length=(int)stack-(int)oldstack;
+     length=(int)(stack-oldstack);
 #endif
     r->data_key=dynamic_save(room_df,oldstack,length,r->data_key);
   }
@@ -251,7 +251,7 @@ room *create_room(player * p)
 #ifdef OSF
       length=(long)stack-(long)tmpstack;
 #else
-      length=(int)stack-(int)tmpstack;
+      length=(int)(stack-tmpstack);
 #endif
      (void) store_int(tmpstack,length);
    }
@@ -3405,4 +3405,3 @@ void all_players_out(saved_player *sp)
       }
    }
 }
-

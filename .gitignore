@@ -1,0 +1,19 @@
+# Compiled programs and object files
+/coding/bin/angel
+/coding/bin/ident
+/coding/bin/intercom
+/coding/bin/summink
+/coding/src/*.o
+/coding/src/angel
+/coding/src/ident
+/coding/src/intercom
+/coding/src/summink
+
+# Generated runtime data
+/coding/files/dynamic/
+/coding/files/notes/
+/coding/files/rooms/
+/coding/files/stuff/banish
+/coding/files/stuff/banish_scan
+/coding/logs/
+/coding/out/

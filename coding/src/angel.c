@@ -13,6 +13,7 @@
 #include <sys/time.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <time.h>
 #if defined( LINUX ) && defined( GLIBC )
 #define __STRICT_ANSI__
 #include <sys/socket.h>
@@ -87,7 +88,7 @@ void log(char *file, char *string)
    }
    sprintf(stack, "%s - %s\n", sys_time(), string);
    if (!no_tty)
-      printf(stack);
+      printf("%s", stack);
    write(fd, stack, strlen(stack));
    close(fd);
 }
@@ -149,7 +150,7 @@ void sigchld(int dummy)
 
 /* Woo woo, the main function thang */
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
    int status;
    char binary_path[256];
@@ -186,7 +187,7 @@ void main(int argc, char *argv[])
       if (!argv[1])
       {
          sprintf(stack, "%d", DEFAULT_PORT);
-         execlp("bin/angel", angel_name, stack, 0);
+         execlp("bin/angel", angel_name, stack, (char *)NULL);
       } else
       {
          argv[0] = angel_name;
@@ -391,4 +392,5 @@ void main(int argc, char *argv[])
       }
    }
    unlink(ANGEL_PID);
+   return 0;
 }

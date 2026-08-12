@@ -162,10 +162,10 @@
  * trailing / is important!
  */
 #define CODING_PORT (4040)
-#define CODING_ROOT "/home/users/someone/summink/coding/"
+#define CODING_ROOT "/Users/jason/Documents/sensisummink/coding/"
 #define CODING_BACKUPS "/tmp/summink/coding/"
 #define LIVE_PORT (4242)
-#define LIVE_ROOT "/home/users/someone/summink/live/"
+#define LIVE_ROOT "//Users/jason/Documents/sensisummink/live/"
 #define LIVE_BACKUPS "/tmp/summink/live/"
 #define SOCKET_PATH "out/alive_socket"
 #define INTERCOM_SOCKET "out/intercom_socket"

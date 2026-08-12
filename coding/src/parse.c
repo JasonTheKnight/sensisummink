@@ -12,10 +12,8 @@
 #include <sys/types.h>
 #include <string.h>
 #include <memory.h>
-#ifndef FREEBSD228
-#include <malloc.h>
-#endif
 #include <stdlib.h>
+#include <time.h>
 
 #ifdef IRIX62
 #include <malloc.h>
@@ -50,11 +48,7 @@ int             comm_match = 0;
 void            bad_stack(void)
 {
    int             missing;
-#ifdef OSF
-    missing = (long) stack - (long) stack_check;
-#else
-    missing = (int) stack - (int) stack_check;
-#endif
+    missing = (int)(stack - stack_check);
    if (last_com)
       sprintf(stack_check, "Bad stack in function %s, missing %d bytes",
          last_com->text, missing);
@@ -1289,7 +1283,7 @@ void            init_help(void)
 #ifdef OSF
     length = (long) stack - (long) hstart;
 #else
-    length = (int) stack - (int) hstart;
+    length = (int)(stack - (char *)hstart);
 #endif
    help_list = (struct command *) MALLOC(length);
    memcpy(help_list, hstart, length);
@@ -1533,5 +1527,3 @@ void summink_version(player *p, char *str)
    tell_player(p, oldstack);
    stack = oldstack;
 }
-
-

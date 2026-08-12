@@ -4,12 +4,11 @@
 
 /* kludgy macro, there must be a better way to do this */
 
+#include <stdint.h>
+
 #define PRIVS(p) ((p)->residency & (PSU|SU|LOWER_ADMIN|ADMIN|HCADMIN))
-#ifdef OSF
-#define align(p) p=(void *)(((long)p+7)&-8)
-#else
-#define align(p) p=(void *)(((int)p+3)&-4)
-#endif
+#define align(p) ((p) = (void *)(((uintptr_t)(p) + sizeof(void *) - 1) & \
+                                 ~((uintptr_t)sizeof(void *) - 1)))
 
 /* modes that players can be in */
 
@@ -600,4 +599,3 @@ extern int      in_total, out_total, in_current, out_current, in_average,
                 out_average, net_count, in_bps, out_bps, in_pack_total,
                 out_pack_total, in_pack_current, out_pack_current, in_pps,
                 out_pps, in_pack_average, out_pack_average;
-

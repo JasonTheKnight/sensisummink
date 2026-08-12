@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <time.h>
 
 #ifdef SUNOS
  #define TIME_DEFINES

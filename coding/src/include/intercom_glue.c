@@ -95,7 +95,7 @@ void start_intercom()
 	    close(scan->fd);
 	  }
 
-      execlp("bin/intercom",intercom_name,0);
+      execlp("bin/intercom", intercom_name, (char *)NULL);
       log("boot","Error, failed to exec intercom");
       exit(1);
       break;
@@ -2199,4 +2199,3 @@ void ver_intercom_version(void)
 #endif
   stack = strchr(stack, 0);
 }
-

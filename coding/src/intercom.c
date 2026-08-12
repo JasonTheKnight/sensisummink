@@ -10,7 +10,6 @@
 #include <fcntl.h>
 #include <time.h>
 #include <unistd.h>
-#include <malloc.h>
 #if defined( LINUX ) && defined( GLIBC )
 #define __STRICT_ANSI__
 #include <sys/socket.h>
@@ -4220,7 +4219,7 @@ static void expire_jobs(void)
 	{
 	  if (*(scan->sender))
 	    {
-	      sprintf(current_name,scan->sender);
+              snprintf(current_name, sizeof(current_name), "%s", scan->sender);
 	      switch (scan->command_type)
 		{
 		case COMMAND_TELL:
@@ -4968,7 +4967,8 @@ extern int main(int argc,char **argv)
   return 0;
 }
 #else
-void main(int dummy) {
+int main(int dummy) {
   /* nothing */
+  return 0;
 }
 #endif

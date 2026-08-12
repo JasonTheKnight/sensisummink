@@ -8,9 +8,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#ifndef FREEBSD228
-#include <malloc.h>
-#endif
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -30,7 +27,7 @@
 #ifdef DYNAMIC
 #include <dirent.h>
 #endif
-#ifdef IRIX
+#if defined(__linux__) || defined(IRIX)
 #include <crypt.h>
 #endif
 
@@ -226,7 +223,7 @@ char *get_int_safe(int *no, char *r, file data)
 #ifdef OSF
      if (((long) r - (long) data.where)<data.length)
 #else
-     if (((int) r - (int) data.where)<data.length)
+     if ((r - data.where) < data.length)
 #endif
       return get_int(no, r);
     else {
@@ -246,7 +243,7 @@ char *get_string_safe(char *str, char *r, file data)
 #ifdef OSF
      if (((long) r - (long) data.where)<data.length)
 #else
-     if (((int) r - (int) data.where)<data.length)
+     if ((r - data.where) < data.length)
 #endif
       return get_string(str, r);
     else {
@@ -314,7 +311,7 @@ void            rooms_update_function(player * p)
     decompress_room(r);
     printf("-=> %s.%s (%s)\n", r->owner->lower_name, r->id, r->name);
     if (r->exits.where)
-       printf(r->exits.where);
+       printf("%s", r->exits.where);
       }
       r = r->next;
    }
@@ -387,7 +384,7 @@ void            do_birthdays(void)
    player         *p;
    saved_player   *scan, **hash, **list;
    int             i, j, fd;
-   time_t         t;
+   time_t         t, birthday;
    struct tm      *date, *bday;
    char           *oldstack;
 
@@ -414,7 +411,8 @@ void            do_birthdays(void)
        {
           memset((char *) p, 0, sizeof(player *));
           restore_player(p, scan->lower_name);
-          bday = localtime((time_t *)&(p->birthday));
+          birthday = (time_t)p->birthday;
+          bday = localtime(&birthday);
           if ((bday->tm_mon == date->tm_mon) &&
          (bday->tm_mday == date->tm_mday))
           {
@@ -433,7 +431,7 @@ void            do_birthdays(void)
 #ifdef OSF
     i = (long) stack - (long) list;
 #else
-    i = (int) stack - (int) list;
+    i = (int)(stack - (char *)list);
 #endif
    if (i > 4)
    {
@@ -592,7 +590,7 @@ file            construct_save_data(player * p)
 #ifdef OSF
     d.length = (long) stack - (long) d.where;
 #else
-    d.length = (int) stack - (int) d.where;
+    d.length = (int)(stack - d.where);
 #endif
    stack = d.where;
    return d;
@@ -706,8 +704,8 @@ int             restore_player_title(player * p, char *name, char *title)
 
    if (title && *title)
    {
-      strncpy(p->title, title, MAX_TITLE);
-      p->title[MAX_TITLE] = 0;
+      strncpy(p->title, title, MAX_TITLE - 1);
+      p->title[MAX_TITLE - 1] = 0;
    }
    if ((p->saved_flags & IAC_GA_ON) && (!(p->flags & EOR_ON)))
       p->flags |= IAC_GA_DO;
@@ -1896,7 +1894,7 @@ int	write_to_file_common(saved_player *sp)
 #ifdef OSF
     length = (long) stack - (long) oldstack;
 #else
-    length = (int) stack - (int) oldstack;
+    length = (int)(stack - oldstack);
 #endif
    (void) store_int(oldstack, length);
    return length;

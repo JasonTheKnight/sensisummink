@@ -7,9 +7,6 @@
 #include <time.h>
 #include <ctype.h>
 #include <stdio.h>
-#ifndef FREEBSD228
-#include <malloc.h>
-#endif
 #include <string.h>
 #include <stdlib.h>
 #include <memory.h>
@@ -3483,5 +3480,4 @@ void crash(player *p, char *str)
    
    *flop = -1;
 }
-
 

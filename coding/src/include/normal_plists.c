@@ -209,7 +209,7 @@ void            sync_to_file(char c, int background)
    for (i = 0; i < HASH_SIZE; i++, hash++)
       for (scan = *hash; scan; scan = scan->next)
         write_to_file(scan);
-   length = (int) stack - (int) oldstack;
+   length = (int)(stack - oldstack);
 
 
    /* test that you can write out a file ok */
@@ -548,4 +548,3 @@ int             load_player(player * p)
    p->saved_flags = sp->saved_flags;
    return 1;
 }
-

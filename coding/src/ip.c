@@ -10,9 +10,6 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <unistd.h>
-#ifndef FREEBSD228
-#include <malloc.h>
-#endif
 #include <stdlib.h> 
 #include <string.h>
 #include <memory.h>
@@ -807,12 +804,13 @@ void same_site(player * p, char *str)
 	type = return_subnet_class(p2->num_addr); 
 	text = p2->num_addr;
 	site_to_stack(text, type);
+        snprintf(address, sizeof(address), "%s", str);
         text = stack;
-        sprintf(stack, "People from .. %s\n", str);
+        sprintf(stack, "People from .. %s\n", address);
         stack = strchr(stack, 0);
         for (p2 = flatlist_start; p2; p2 = p2->flat_next)
         {
-	    if (match_site(p2, str))
+	    if (match_site(p2, address))
 	    {
 #ifdef IDENT
 	        if (p2->name[0]!=0)

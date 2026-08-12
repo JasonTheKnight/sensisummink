@@ -981,7 +981,7 @@ void	create_dynamic_directories(void)
          {
             printf("FUCKED!\n");
             sprintf(stack, "Meep! :-( I can't create files/dynamic/%c", 'a'+di);
-            printf(stack);
+            printf("%s", stack);
             exit(1);
          }
       }
@@ -1002,7 +1002,7 @@ void	create_dynamic_directories(void)
             {
                printf("FUCKED!\n");
                sprintf(stack, "Meep! :-( I can't create files/dynamic/%c/%c", 'a'+di, 'a'+di2);
-               printf(stack);
+               printf("%s", stack);
                exit(1);
             }
          }

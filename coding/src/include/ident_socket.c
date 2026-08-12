@@ -123,14 +123,9 @@ int init_ident_server(void)
       }
    }
 
-#ifdef SOLARIS
-   /* Ack never use VFORK on SOLARIS 2 it can have very nasty effects */
+   /* The child performs libc calls before exec, which is not safe after
+    * vfork() on modern systems. */
    ret = fork();
-#elif IRIX
-   ret = fork();  /* irix is buggy */
-#else
-   ret = vfork();
-#endif /* SOLARIS */
    switch (ret)
    {
       case -1: /* Error */
@@ -145,7 +140,7 @@ int init_ident_server(void)
          close(1);
          dup(IDENT_SERVER_WRITE);
          close(IDENT_SERVER_WRITE);
-         execlp("bin/ident", name_buffer, 0);
+         execlp("bin/ident", name_buffer, (char *)NULL);
          log("boot", "init_ident_server failed to exec ident\n");
          exit(1);
       default: /* Parent */
@@ -305,10 +300,21 @@ void read_ident_reply(void)
       return;
    }
    bread = read(IDENT_CLIENT_READ, ident_buf_input, BUFFER_SIZE - 20);
+   if (bread <= 0)
+   {
+      if (bread < 0 && errno != EINTR && errno != EAGAIN)
+         log("ident", "Failed to read reply from ident server");
+      return;
+   }
    ident_buf_input[bread] = '\0';
 
    for (i = 0 ; i < bread ; )
    {
+      if (bufpos >= BUFFER_SIZE - 1)
+      {
+         log("ident", "Oversized reply from ident server discarded");
+         bufpos = 0;
+      }
       reply_buf[bufpos++] = ident_buf_input[i++];
       if ((bufpos > (sizeof(char) + sizeof(ident_identifier)))
           && (reply_buf[bufpos - 1] == '\n'))
@@ -326,84 +332,38 @@ void read_ident_reply(void)
 
 void process_reply(int msg_size)
 {
-   char *s;
-   int i;
+   size_t reply_length;
    ident_identifier id;
    player *scan;
 
-   for (i = 0 ; i < msg_size ;)
+   if (msg_size < (int)(1 + sizeof(ident_identifier) + 1) ||
+       reply_buf[0] != SERVER_SEND_REPLY || reply_buf[msg_size - 1] != '\n')
    {
-      switch (reply_buf[i++])
-      {
-         case SERVER_SEND_REPLY:
-            memcpy(&id, &reply_buf[i], sizeof(ident_identifier));
-            i += sizeof(ident_identifier);
-#if defined(DEBUG_IDENT)
-	    vlog("ident_ids", "Got reply for ident_id %d\n", 
-	        id);
-#endif /* DEBUG_IDENT */
-            for (scan = flatlist_start ; scan ; scan = scan->flat_next)
-            {
-               if (scan->ident_id == id)
-               {
-#if defined(DEBUG_IDENT)
-		  vlog("ident_ids", "Matched ident_id %d to Player '%s',"
-		  		   " fd %d\n",
-		      id,
-		      scan->name[0] ? scan->name : "<NOT ENTERED>",
-		      scan->fd);
-#endif /* DEBUG_IDENT */
-                  break;
-               }
-            }
-#if defined(DEBUG_IDENT)
-	    fprintf(stderr, "Client: Got reply '%s'\n", &reply_buf[i]);
-#endif /* DEBUG_IDENT */
-            s = strchr(&reply_buf[i], '\n');
-            if (s)
-            {
-               *s++ = '\0';
-            } else
-            {
-	       s = strchr(reply_buf, '\0');
-	       *s++ = '\n';
-	       *s = '\0';
-            }
-	    if (scan)
-	    {
-               strncpy(scan->userID, &reply_buf[i],
-			(MAX_REMOTE_USER < (s - &reply_buf[i]) ? 
-				MAX_REMOTE_USER : (s - &reply_buf[i])));
-#if defined(DEBUG_IDENT)
-	       vlog("ident_ids", "Write ident_id %d, Reply '%s' to player '%s'"
-	       		        " fd %d\n",
-		   id,
-		   scan->userID,
-		   scan->name[0] ? scan->name : "<NOT ENTERED>",
-		   scan->fd);
-#endif /* DEBUG_IDENT */
-            } else
-            {
-               /* Can only assume connection dropped from here and we still
-                * somehow got a reply, throw it away
-                */
-#if defined(DEBUG_IDENT)
-	       vlog("ident_ids", "Threw away response for ident_id %d\n",
-	           id);
-#endif /* DEBUG_IDENT */
-            }
-	    while (reply_buf[i] != '\n')
-	    {
-	       i++;
-	    }
-            break;
-         default:
-#if defined(DEBUG_IDENT_TOO)
-            vlog("ident", "Bad reply from server '%d'\n", reply_buf[i]);
-#endif /* DEBUG_IDENT_TOO */
-            i++;
-      }
+      log("ident", "Malformed reply from ident server discarded");
+      return;
    }
+
+   memcpy(&id, &reply_buf[1], sizeof(ident_identifier));
+#if defined(DEBUG_IDENT)
+   vlog("ident_ids", "Got reply for ident_id %d\n", id);
+#endif /* DEBUG_IDENT */
+   for (scan = flatlist_start ; scan ; scan = scan->flat_next)
+      if (scan->ident_id == id)
+         break;
+
+   if (!scan)
+      return;
+
+   reply_length = (size_t)msg_size - 1 - sizeof(ident_identifier) - 1;
+   if (reply_length >= sizeof(scan->userID))
+      reply_length = sizeof(scan->userID) - 1;
+   memcpy(scan->userID, &reply_buf[1 + sizeof(ident_identifier)], reply_length);
+   scan->userID[reply_length] = '\0';
+
+#if defined(DEBUG_IDENT)
+   vlog("ident_ids", "Matched ident_id %d to Player '%s', fd %d\n",
+        id, scan->name[0] ? scan->name : "<NOT ENTERED>", scan->fd);
+#endif /* DEBUG_IDENT */
 }
 
 
@@ -413,5 +373,3 @@ void	ident_version(void)
   sprintf(stack, " -=> Ident server V1.01 by Athanasius and Oolon enabled.\n");
   stack = strchr(stack, 0);
 }
-
-

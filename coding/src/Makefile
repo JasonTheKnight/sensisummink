@@ -7,8 +7,8 @@
 # COMPILER SELECTION
 # If you want to use gcc, use this section
 #
-CC		= gcc
-CFLAGS		= -ggdb -pedantic -Wall -Wstrict-prototypes -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Winline -Wtraditional -Wnested-externs
+CC		?= cc
+CFLAGS		?= -g -Wall -Wstrict-prototypes -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align
 LDFLAGS		= 
 #
 # On some systems, for example Irix - you get far better results from cc
@@ -26,7 +26,12 @@ LDFLAGS		=
 #LIBS	= -Wl,-qmagic
 #
 # Linux glibc (example redhat 5.x) - see above.
-LIBS	= -Wl,-qmagic -lcrypt
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+LIBS	= -lcrypt
+else
+LIBS	=
+endif
 #
 # OSF1 (Digital Unix) 4.0a-d
 #LIBS	=
@@ -55,6 +60,7 @@ ANGEL_BIN       = angel
 INTERCOM_BIN    = intercom
 IDENT_BIN	= ident
 COMMON_DEPENDS	= include/config.h include/player.h include/proto.h include/robot_proto.h include/robot_player.h Makefile include/missing_headers.h
+RUNTIME_ROOT	= ..
 
 
 OBJS        = admin.o \
@@ -74,8 +80,24 @@ OBJS        = admin.o \
               tag.o 
 
 
-all:            $(TALKER_BIN) $(ANGEL_BIN) $(IDENT_BIN) $(INTERCOM_BIN)
+all:            runtime-dirs $(TALKER_BIN) $(ANGEL_BIN) $(IDENT_BIN) $(INTERCOM_BIN)
 				@echo 'Made all'
+
+.PHONY: all clean runtime-dirs
+
+runtime-dirs:
+	mkdir -p $(RUNTIME_ROOT)/bin \
+		$(RUNTIME_ROOT)/out \
+		$(RUNTIME_ROOT)/logs/emergency \
+		$(RUNTIME_ROOT)/logs/scripts \
+		$(RUNTIME_ROOT)/files/dynamic \
+		$(RUNTIME_ROOT)/files/defrag \
+		$(RUNTIME_ROOT)/files/notes \
+		$(RUNTIME_ROOT)/files/players \
+		$(RUNTIME_ROOT)/files/rooms \
+		$(RUNTIME_ROOT)/files/stuff
+	touch $(RUNTIME_ROOT)/files/stuff/banish \
+		$(RUNTIME_ROOT)/files/stuff/banish_scan
 
 ident.o:	ident.c include/player.h include/missing_headers.h include/ident.h include/config.h Makefile
 		$(CC) $(CFLAGS) $(DEFS) -c ident.c -o ident.o
@@ -122,7 +144,7 @@ install.ident:	$(IDENT_BIN)
 	chmod 700 $(BIN)/$(IDENT_BIN)
 	@echo 'Made ident install'
 
-install.all:     $(TALKER_BIN) $(ANGEL_BIN) $(IDENT_BIN) $(INTERCOM_BIN)
+install.all:     runtime-dirs $(TALKER_BIN) $(ANGEL_BIN) $(IDENT_BIN) $(INTERCOM_BIN)
 	mv $(TALKER_BIN) $(BIN)
 	chmod 700 $(BIN)/$(TALKER_BIN)
 	mv $(ANGEL_BIN) $(BIN)
