@@ -1,0 +1,44 @@
+Modernisation summary
+=====================
+
+This source has been updated for current 64-bit macOS and Linux systems:
+
+* The Makefiles use the system C compiler, select platform-appropriate crypt
+  linking, and no longer pass obsolete Linux linker options on macOS.
+* Pointer alignment and pointer-difference calculations are safe on 64-bit
+  systems, including Apple Silicon and x86-64 Linux.
+* Obsolete or platform-specific interfaces and headers have been replaced
+  with current equivalents.  This includes malloc headers, sigpause,
+  sys_errlist, vfork usage in the Ident launcher, and non-standard main
+  declarations.
+* The main listening socket binds without requiring the machine's hostname
+  to have a DNS entry.
+* The Ident reply path validates message framing and lengths, bounds buffer
+  writes, and safely handles failed or malformed replies.
+* Several compiler-discovered defects were corrected, including missing
+  standard headers, an out-of-bounds title terminator, unsafe timestamp
+  aliasing, overlapping string formatting, and format-string hazards.
+* Builds create the runtime directory tree and initial banish files that
+  were absent because empty directories were not retained in the archive.
+* Generated binaries, object files, logs, and runtime state are excluded by
+  the repository .gitignore.
+
+Verified behaviour
+==================
+
+* A clean build completes with Apple Clang 17 on arm64 macOS 15 and produces
+  native arm64 summink, angel, ident, and intercom executables.
+* The coding server completes first-run directory and data initialisation,
+  loads its rooms, notes, parser, and help system, and reaches the listening
+  state on port 4040 on macOS.
+* The build has been exercised with modern GCC on Ubuntu through the source
+  files that previously failed because of hidden legacy declarations.  The
+  Linux Makefile uses libcrypt; install its development package if linking
+  fails.
+* A first-login crash was traced to the legacy Ident reply handler.  That
+  handler is now bounded and validates replies.  A fresh Ubuntu runtime test
+  after this fix is recommended before exposing the service publicly.
+
+The code still produces warnings from its historical C style.  Successful
+compilation does not imply that this Internet-facing 1990s server has had a
+complete security audit; run it on a private interface while evaluating it.
