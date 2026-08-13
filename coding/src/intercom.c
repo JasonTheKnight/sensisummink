@@ -1808,10 +1808,10 @@ static void do_user_action(talker_list *remote_talker,char *str)
 static void parse_remote_talker_input(talker_list *remote_talker,int validated)
 {
   char c;
-  int chars_left;
+  int chars_left,total_length,max_length;
   char *oldstack,*ptr;
   int parse_ok=0;
-  packet *this_packet;
+  packet *this_packet,*scan_packet;
 
   /*Firstly, if we were waiting for a connect, this means it failed if we get
     here*/
@@ -1844,8 +1844,26 @@ static void parse_remote_talker_input(talker_list *remote_talker,int validated)
       return;
     }
 
-  this_packet=add_packet_to_talker(remote_talker);
   oldstack = stack;
+  max_length=(int)((stack_start+INTERCOM_STACK)-oldstack)-1;
+  total_length=0;
+  scan_packet=remote_talker->packet_anchor;
+  while (scan_packet)
+    {
+      total_length+=scan_packet->length;
+      scan_packet=scan_packet->next;
+    }
+
+  if (total_length>=max_length)
+    {
+      log("intercom","Oversized intercom message. Closing connection.");
+      free_talker_packets(remote_talker);
+      I_SHUTDOWN(remote_talker->fd,2);
+      do_close(remote_talker);
+      return;
+    }
+
+  this_packet=add_packet_to_talker(remote_talker);
 
   c=(char)(END_MESSAGE-1);
   while (chars_left && c!=(char)END_MESSAGE)
@@ -1862,8 +1880,17 @@ static void parse_remote_talker_input(talker_list *remote_talker,int validated)
         }
       if (c!=(char)END_MESSAGE)
 	{
+	  if (total_length>=max_length)
+	    {
+	      log("intercom","Oversized intercom message. Closing connection.");
+	      free_talker_packets(remote_talker);
+	      I_SHUTDOWN(remote_talker->fd,2);
+	      do_close(remote_talker);
+	      return;
+	    }
 	  this_packet->data[this_packet->length]=c;
 	  this_packet->length++;
+	  total_length++;
 	  if (this_packet->length>=MAX_PACKET)
 	    this_packet=add_packet_to_talker(remote_talker);     
 	}
